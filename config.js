@@ -3,5 +3,5 @@
 // ضع رابط السكربت المنشور (ينتهي بـ /exec) بين علامتي التنصيص
 // لا تضع هنا أي كلمة سر
 window.ROL_CONFIG = {
-  scriptUrl: ""
+  scriptUrl: "https://script.google.com/macros/s/AKfycby6qG-Z6io1sT1VX6qZLRBsNjr_FkOBNDliGnPbG_flT224Myd2BOFXd3rzSkcniQ33/exec"
 };
