@@ -2,5 +2,5 @@
 // يُرفع على GitHub بجوار admin.html و user.html
 // لا تضع هنا أي كلمة سر
 window.ROL_CONFIG = {
-  scriptUrl: "https://script.google.com/macros/s/AKfycbzrBWz1wX93Q_67axnKN7aD4n7EMOy9UL5DXGLI9GzC9x2iv9JtHbfJXJ6miMyDzeJS/exec"
+  scriptUrl: "https://script.google.com/macros/s/AKfycbySue7eA_0NaJxd5uXF8XM7Y94lXA8uWGNd7wOBmNlfXl8JH4HZjKw6aX9Ldb2uI2na/exec"
 };
