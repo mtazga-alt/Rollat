@@ -1,0 +1,42 @@
+{
+  "id": "./user.html",
+  "name": "أرشيف رول الجلسات",
+  "short_name": "أرشيف الرول",
+  "description": "الاطلاع على رولات الجلسات مقسمة بالشهور مع شريط الأخبار",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./user.html",
+  "scope": "./user.html",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
+  "background_color": "#0f2440",
+  "theme_color": "#0f2440",
+  "categories": [
+    "productivity",
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "icons/user-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/user-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/user-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

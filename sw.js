@@ -1,7 +1,10 @@
-/* نظام تصوير رول الجلسات — عامل الخدمة للعمل بدون اتصال
+/* نظام تصوير رول الجلسات — عامل الخدمة: تشغيل كتطبيق وبدون اتصال
    يُرفع على GitHub بجوار admin.html و employee.html و user.html */
-const CACHE='rol-v1';
-const CORE=['./employee.html','./admin.html','./user.html','./config.js'];
+const CACHE='rol-v2';
+const CORE=['./employee.html','./admin.html','./user.html','./config.js',
+  './manifest-admin.json','./manifest-employee.json','./manifest-user.json',
+  './icons/admin-192.png','./icons/employee-192.png','./icons/user-192.png',
+  './icons/admin-512.png','./icons/employee-512.png','./icons/user-512.png'];
 
 self.addEventListener('install',e=>{
   self.skipWaiting();
@@ -24,7 +27,7 @@ self.addEventListener('fetch',e=>{
     }catch(err){
       const m=await caches.match(r,{ignoreSearch:true});
       if(m)return m;
-      if(r.mode==='navigate')return (await caches.match('./employee.html'))||Response.error();
+      if(r.mode==='navigate'){const page=u.pathname.split('/').pop()||'employee.html';return (await caches.match('./'+page))||(await caches.match('./employee.html'))||Response.error()}
       return Response.error();
     }
   })());
