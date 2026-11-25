@@ -1,34 +1,63 @@
-/* نظام تصوير رول الجلسات — عامل الخدمة: تشغيل كتطبيق وبدون اتصال
-   يُرفع على GitHub بجوار admin.html و employee.html و user.html */
-const CACHE='rol-v2';
-const CORE=['./employee.html','./admin.html','./user.html','./config.js',
-  './manifest-admin.json','./manifest-employee.json','./manifest-user.json',
-  './icons/admin-192.png','./icons/employee-192.png','./icons/user-192.png',
-  './icons/admin-512.png','./icons/employee-512.png','./icons/user-512.png'];
+/* ميزان — Service Worker */
+const VERSION = 'mizan-v1.10.0';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './maskable-512.png', './apple-touch-icon.png'];
+const EXTRA = [
+  'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
+  'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap'
+];
 
-self.addEventListener('install',e=>{
-  self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then(c=>Promise.all(CORE.map(u=>c.add(new Request(u,{cache:'reload'})).catch(()=>{})))));
+self.addEventListener('install', e => {
+  e.waitUntil((async () => {
+    const c = await caches.open(VERSION);
+    await Promise.allSettled(SHELL.map(u => c.add(new Request(u, { cache: 'reload' }))));
+    await Promise.allSettled(EXTRA.map(u => fetch(u, { mode: 'no-cors' }).then(r => c.put(u, r))));
+  })());
 });
-self.addEventListener('activate',e=>{
-  e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+
+self.addEventListener('activate', e => {
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
-// الشبكة أولاً (لتصل التحديثات)، والنسخة المحفوظة عند انقطاع الاتصال
-self.addEventListener('fetch',e=>{
-  const r=e.request;
-  if(r.method!=='GET')return;
-  const u=new URL(r.url);
-  if(u.origin!==location.origin)return; // طلبات Google لا تُخزَّن
-  e.respondWith((async()=>{
-    try{
-      const res=await Promise.race([fetch(r),new Promise((_,j)=>setTimeout(()=>j(new Error('timeout')),6000))]);
-      if(res&&res.ok){const cp=res.clone();caches.open(CACHE).then(c=>c.put(r,cp))}
-      return res;
-    }catch(err){
-      const m=await caches.match(r,{ignoreSearch:true});
-      if(m)return m;
-      if(r.mode==='navigate'){const page=u.pathname.split('/').pop()||'employee.html';return (await caches.match('./'+page))||(await caches.match('./employee.html'))||Response.error()}
-      return Response.error();
-    }
+
+self.addEventListener('message', e => { if (e.data === 'skip') self.skipWaiting(); });
+
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.hostname === 'api.github.com') return; // البيانات دائماً من الشبكة، والتطبيق يحتفظ بنسخته المحلية
+  if (req.mode === 'navigate') {
+    // يفتح فوراً من النسخة المحفوظة، ويحدّثها في الخلفية — حتى لا يتعلق التطبيق مع شبكة ضعيفة
+    const net = fetch(req, { cache: 'no-store' }).then(async r => {
+      if (r && r.ok && r.type === 'basic') { const c = await caches.open(VERSION); await c.put('./index.html', r.clone()); }
+      return r;
+    }).catch(() => null);
+    e.respondWith((async () => {
+      const cached = (await caches.match('./index.html')) || (await caches.match('./'));
+      if (cached) { e.waitUntil(net); return cached; }
+      const timeout = new Promise(res => setTimeout(() => res(null), 8000));
+      return (await Promise.race([net, timeout])) || new Response('<meta charset="utf-8"><body style="font-family:Tahoma;text-align:center;padding:40px" dir="rtl"><h2>تعذر الاتصال</h2><p>تحقق من الإنترنت ثم أعد المحاولة</p><button onclick="location.reload()">إعادة المحاولة</button>', { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    })());
+    return;
+  }
+  e.respondWith((async () => {
+    const cached = await caches.match(req);
+    const net = fetch(req).then(async r => {
+      if (r && (r.ok || r.type === 'opaque')) { const c = await caches.open(VERSION); c.put(req, r.clone()); }
+      return r;
+    }).catch(() => null);
+    return cached || (await net) || new Response('', { status: 504 });
+  })());
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (all.length) { all[0].focus(); all[0].postMessage({ type: 'open-notifs' }); }
+    else self.clients.openWindow('./index.html');
   })());
 });
